@@ -230,16 +230,17 @@
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     /* ========================================================== */
-    /* ⚠️ [ALTERAR AQUI] - Insira as credenciais do seu Firebase  */
+    /* CONFIGURAÇÃO DO FIREBASE COM AS CHAVES INJETADAS           */
     /* ========================================================== */
     const firebaseConfig = {
-      apiKey: "SUA_API_KEY_AQUI",
-      authDomain: "seu-projeto.firebaseapp.com",
-      databaseURL: "https://seu-projeto-default-rtdb.firebaseio.com",
-      projectId: "seu-projeto",
-      storageBucket: "seu-projeto.appspot.com",
-      messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-      appId: "SEU_APP_ID"
+      apiKey: "AIzaSyBqCYHv6kzXeF_zCsbzCNSMkHfwrImhjVc",
+      authDomain: "jogo-tres-pontos.firebaseapp.com",
+      databaseURL: "https://jogo-tres-pontos-default-rtdb.firebaseio.com",
+      projectId: "jogo-tres-pontos",
+      storageBucket: "jogo-tres-pontos.firebasestorage.app",
+      messagingSenderId: "60682371403",
+      appId: "1:60682371403:web:d4641b60bc7e5b8a1de8ce",
+      measurementId: "G-22N725HK6E"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -316,7 +317,7 @@
               { points: 9, text: "Dica 2: Cobre ou reembolsa despesas decorrentes de falecimento do segurado." },
               { points: 8, text: "Dica 3: Pode ser acionado pelos familiares apresentando a certidão de óbito e notas de despesa." }
             ],
-            explanation: "O Auxílio Funeral é um serviço gratuito complementar em apólices elegíveis do seguro SPF[cite: 1, 2]."
+            explanation: "O Auxílio Funeral é um serviço gratuito complementar em apólices elegíveis do seguro SPF[cite: 1]."
           }
         ]
       },
@@ -353,7 +354,7 @@
               { points: 9, text: "Dica 2: Garante a quitação de até 6 parcelas em demissões sem justa causa." },
               { points: 8, text: "Dica 3: Exige a apresentação do Termo de Rescisão e da Carteira de Trabalho." }
             ],
-            explanation: "Desemprego Involuntário cobre parcelas do financiamento em demissões sem justa causa de celetistas[cite: 1, 2]."
+            explanation: "Desemprego Involuntário cobre parcelas do financiamento em demissões sem justa causa de celetistas[cite: 1]."
           }
         ]
       },
@@ -390,7 +391,7 @@
               { points: 9, text: "Dica 2: Cobre o pagamento de parcelas em casos de afastamento por doença ou acidente." },
               { points: 8, text: "Dica 3: Exige comprovação de trabalho autônomo e relatório/laudo médico." }
             ],
-            explanation: "Incapacidade Física Temporária atende autônomos impedidos de trabalhar por motivo de saúde[cite: 1, 2]."
+            explanation: "Incapacidade Física Temporária atende autônomos impedidos de trabalhar por motivo de saúde[cite: 1]."
           }
         ]
       },
@@ -427,7 +428,7 @@
               { points: 9, text: "Dica 2: No seguro SPF, por exemplo, exige-se prazo mínimo de 31 dias para elegibilidade." },
               { points: 8, text: "Dica 3: Período regimental em que o seguro ainda não indeniza o sinistro." }
             ],
-            explanation: "Carência de Sinistro é o período legal mínimo após o evento para ter direito à indenização[cite: 2]."
+            explanation: "Carência de Sinistro é o período legal mínimo após o evento para ter direito à indenização."
           }
         ]
       }
@@ -437,9 +438,7 @@
     let currentPlayer = { name: "", matricula: "", score: 0, completedRounds: 0 };
     let currentRoundState = { levelId: null, roundIndex: 0, clueIndex: 0, roundData: null };
 
-    // =========================================================================
-    // EXPOSIÇÃO EXPLÍCITA DE TODAS AS FUNÇÕES AO OBJETO WINDOW (Correção do Erro)
-    // =========================================================================
+    // EXPOSIÇÃO EXPLÍCITA DE TODAS AS FUNÇÕES AO OBJETO WINDOW
     window.goToCover = () => showScreen("screenCover");
     
     window.goToRegistration = () => {
@@ -513,9 +512,7 @@
     window.showLevelsScreen = showLevelsScreen;
     window.closeModal = closeModal;
 
-    // =========================================================================
     // INTEGRAÇÃO COM O FIREBASE REALTIME DATABASE
-    // =========================================================================
     window.updateRanking = function(player) {
       set(ref(db, 'rankings/' + player.matricula), {
         name: player.name,
@@ -560,7 +557,6 @@
       });
     });
 
-    // Funções internas auxiliares
     function showLevelsScreen() {
       renderLevels();
       showScreen("screenLevels");
