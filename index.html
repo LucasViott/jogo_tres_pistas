@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jogo das Três Pistas - Operação Honda & Bulgarelli</title>
+  <title>Caça as Bruxas - Operação Honda & Bulgarelli</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -230,7 +230,7 @@
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     /* ========================================================== */
-    /* CONFIGURAÇÃO DO FIREBASE COM AS CHAVES INJETADAS           */
+    /* CONFIGURAÇÃO DO FIREBASE                                   */
     /* ========================================================== */
     const firebaseConfig = {
       apiKey: "AIzaSyBqCYHv6kzXeF_zCsbzCNSMkHfwrImhjVc",
@@ -660,7 +660,18 @@
         currentRoundState.clueIndex = 0;
         loadRoundUI();
       } else {
-        showLevelsScreen();
+        // NÍVEL CONCLUÍDO: Atualiza e exibe modal de parabéns com a pontuação final registrada no Firebase
+        savePlayerData();
+        window.updateRanking(currentPlayer);
+
+        openModal(
+          true,
+          "NÍVEL CONCLUÍDO!",
+          `Parabéns, ${currentPlayer.name}! Você concluiu todas as rodadas do <strong>${level.title}</strong>.<br><br>Sua pontuação total acumulada é de <strong class="text-yellow-400">${currentPlayer.score} pontos</strong> e já foi salva oficialmente no <strong>Ranking On-line</strong>!`,
+          () => {
+            showLevelsScreen();
+          }
+        );
       }
     }
 
@@ -678,7 +689,7 @@
 
       if (isSuccess) {
         card.className = "max-w-md w-full glass-card p-6 sm:p-8 rounded-3xl border border-green-500/50 text-center shadow-2xl bg-gradient-to-b from-green-950/80 to-black/90";
-        iconContainer.innerHTML = `<i class="fa-solid fa-circle-check text-6xl text-green-400 animate-bounce"></i>`;
+        iconContainer.innerHTML = `<i class="fa-solid fa-trophy text-6xl text-yellow-400 animate-bounce"></i>`;
         modalTitle.className = "text-2xl font-bold mb-2 text-green-400";
         button.className = "w-full py-3 font-bold rounded-xl text-white bg-green-600 hover:bg-green-500 shadow-lg shadow-green-900/50 transition";
       } else {
