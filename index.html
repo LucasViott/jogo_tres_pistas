@@ -19,27 +19,16 @@
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.12);
     }
-    .honda-red {
-      background-color: #cc0000;
-    }
-    .honda-red-hover:hover {
-      background-color: #a80000;
-    }
-    .text-honda {
-      color: #ff3333;
-    }
+    .honda-red { background-color: #cc0000; }
+    .honda-red-hover:hover { background-color: #a80000; }
+    .text-honda { color: #ff3333; }
     @keyframes expandFullscreen {
       0% { transform: scale(0.2); opacity: 0; border-radius: 50%; }
       50% { transform: scale(1.1); opacity: 1; }
       100% { transform: scale(1); opacity: 1; border-radius: 0; }
     }
-    .animate-expand {
-      animation: expandFullscreen 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    .modal-backdrop {
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(6px);
-    }
+    .animate-expand { animation: expandFullscreen 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .modal-backdrop { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px); }
   </style>
 </head>
 <body class="flex flex-col justify-between min-h-screen text-slate-100">
@@ -95,7 +84,7 @@
       <div class="text-center mb-6">
         <i class="fa-solid fa-id-card text-4xl text-red-500 mb-2"></i>
         <h2 class="text-2xl font-bold">Identificação do Operador</h2>
-        <p class="text-xs text-slate-400">Insira os seus dados para registar a sua pontuação no ranking</p>
+        <p class="text-xs text-slate-400">Insira os seus dados para registar a sua pontuação no ranking on-line</p>
       </div>
       <form id="formRegistration" onsubmit="handleRegistrationSubmit(event)" class="space-y-4">
         <div>
@@ -168,10 +157,10 @@
       <div id="levelsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </div>
 
-    <!-- Tabela de Ranking (Firebase) -->
+    <!-- Tabela de Ranking On-line (Firebase) -->
     <div class="glass-card p-6 rounded-2xl border-red-500/20">
       <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-        <i class="fa-solid fa-ranking-star text-yellow-400"></i> Ranking da Operação (Maior Pontuação)
+        <i class="fa-solid fa-ranking-star text-yellow-400"></i> Ranking da Operação On-line (Firebase)
       </h2>
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm">
@@ -235,18 +224,21 @@
     <p>Treinamento Operacional Honda & Bulgarelli Advogados — © 2026</p>
   </footer>
 
-  <!-- SCRIPT COM FIREBASE (TYPE="MODULE") -->
+  <!-- SCRIPT COM INTEGRAÇÃO DO FIREBASE (TYPE="MODULE") -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+    /* ========================================================== */
+    /* ⚠️ [ALTERAR AQUI] - Insira as credenciais do seu Firebase  */
+    /* ========================================================== */
     const firebaseConfig = {
-      apiKey: "SUA_API_KEY",
-      authDomain: "jogo-tres-pontos.firebaseapp.com",
-      databaseURL: "https://jogo-tres-pontos-default-rtdb.firebaseio.com",
-      projectId: "jogo-tres-pontos",
-      storageBucket: "jogo-tres-pontos.appspot.com",
-      messagingSenderId: "60682371403",
+      apiKey: "SUA_API_KEY_AQUI",
+      authDomain: "seu-projeto.firebaseapp.com",
+      databaseURL: "https://seu-projeto-default-rtdb.firebaseio.com",
+      projectId: "seu-projeto",
+      storageBucket: "seu-projeto.appspot.com",
+      messagingSenderId: "SEU_MESSAGING_SENDER_ID",
       appId: "SEU_APP_ID"
     };
 
@@ -445,6 +437,7 @@
     let currentPlayer = { name: "", matricula: "", score: 0, completedRounds: 0 };
     let currentRoundState = { levelId: null, roundIndex: 0, clueIndex: 0, roundData: null };
 
+    // Funções globais expostas para o escopo HTML via window
     window.goToCover = () => showScreen("screenCover");
     window.goToRegistration = () => {
       if (currentPlayer.name) {
@@ -499,7 +492,7 @@
         currentPlayer.score += earnedPoints;
         currentPlayer.completedRounds += 1;
         savePlayerData();
-        window.updateRanking(currentPlayer);
+        window.updateRanking(currentPlayer); // Envia pontuação atualizada para o Firebase
 
         openModal(true, "RESPOSTA CORRETA!", `Parabéns, ${currentPlayer.name}! Acertou a resposta <strong>"${round.answer}"</strong> na Pista ${currentRoundState.clueIndex + 1} e ganhou <strong>+${earnedPoints} pontos</strong>!`, () => advanceRound());
       } else {
@@ -517,7 +510,11 @@
     window.showLevelsScreen = showLevelsScreen;
     window.closeModal = closeModal;
 
+    /* ========================================================== */
+    /* 🌐 FUNÇÕES DE INTEGRAÇÃO COM O FIREBASE REALTIME DATABASE   */
+    /* ========================================================== */
     window.updateRanking = function(player) {
+      // Salva os dados do jogador usando a matrícula como chave única no nó 'rankings'
       set(ref(db, 'rankings/' + player.matricula), {
         name: player.name,
         matricula: player.matricula,
@@ -526,17 +523,22 @@
       });
     };
 
+    // Escuta em tempo real o banco de dados e atualiza a tabela do ranking
     onValue(ref(db, 'rankings'), (snapshot) => {
       const data = snapshot.val();
       const rankingArray = data ? Object.values(data) : [];
+      
+      // Ordena o ranking da maior para a menor pontuação
       rankingArray.sort((a, b) => b.score - a.score);
 
       const tbody = document.getElementById("rankingTableBody");
       tbody.innerHTML = "";
+      
       if (rankingArray.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500 italic">Nenhum jogador registrado ainda. Seja o primeiro!</td></tr>`;
         return;
       }
+      
       rankingArray.forEach((item, idx) => {
         const isCurrent = item.matricula === currentPlayer.matricula;
         let medal = `#${idx + 1}`;
