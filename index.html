@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogo das Três Pistas - Operação Honda & Bulgarelli</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: radial-gradient(circle at top, #2d0608 0%, #0d0102 100%);
+      color: #ffffff;
+      min-height: 100vh;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .honda-red {
+      background-color: #cc0000;
+    }
+    .honda-red-hover:hover {
+      background-color: #a80000;
+    }
+    .text-honda {
+      color: #ff3333;
+    }
+    @keyframes expandFullscreen {
+      0% { transform: scale(0.2); opacity: 0; border-radius: 50%; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; border-radius: 0; }
+    }
+    .animate-expand {
+      animation: expandFullscreen 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .modal-backdrop {
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(6px);
+    }
+  </style>
+</head>
+<body class="flex flex-col justify-between min-h-screen text-slate-100">
+
+  <!-- BARRA DE NAVEGAÇÃO SUPERIOR -->
+  <header id="appHeader" class="hidden sticky top-0 z-30 glass-card border-b border-red-900/40 px-4 py-3 shadow-xl">
+    <div class="max-w-5xl mx-auto flex flex-wrap justify-between items-center gap-2">
+      <div class="flex items-center space-x-3">
+        <i class="fa-solid fa-motorcycle text-2xl text-red-500"></i>
+        <div>
+          <span class="font-bold text-sm tracking-wider uppercase text-red-500 block">Operação Honda</span>
+          <span class="text-xs text-slate-400">Bulgarelli Advogados</span>
+        </div>
+      </div>
+      <div id="userInfoHeader" class="text-xs sm:text-sm bg-black/40 px-3 py-1.5 rounded-full border border-red-500/30 flex items-center gap-2">
+        <i class="fa-solid fa-user-check text-green-400"></i>
+        <span id="headerPlayerName" class="font-semibold text-white">---</span>
+        <span class="text-slate-500">|</span>
+        <span id="headerPlayerMatricula" class="text-slate-300">---</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="goToRegistration()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg border border-slate-600 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-user-pen text-yellow-400"></i> Alterar Jogador
+        </button>
+        <button onclick="goToCover()" class="px-3 py-1.5 bg-red-900/60 hover:bg-red-800 text-xs font-semibold rounded-lg border border-red-500/50 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-house text-red-300"></i> Capa
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- TELA 1: CAPA INICIAL -->
+  <section id="screenCover" class="flex-1 flex flex-col justify-center items-center text-center p-6">
+    <div class="max-w-2xl glass-card p-8 sm:p-12 rounded-3xl border-red-600/30 shadow-2xl relative overflow-hidden">
+      <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-red-600/10 rounded-full blur-2xl"></div>
+      <i class="fa-solid fa-trophy text-6xl text-red-500 mb-6 animate-bounce"></i>
+      <h1 class="text-3xl sm:text-5xl font-extrabold uppercase tracking-tight mb-2">
+        Jogo das <span class="text-honda">Três Pistas</span>
+      </h1>
+      <p class="text-slate-400 text-sm sm:text-base mb-8">
+        Treinamento de Negociação e Recuperação de Crédito — <span class="text-red-400 font-semibold">Honda & Bulgarelli</span>
+      </p>
+      <button onclick="goToRegistration()" class="w-full sm:w-auto px-10 py-4 honda-red honda-red-hover text-white font-bold text-lg rounded-2xl shadow-lg shadow-red-900/50 transition duration-300 transform hover:scale-105 flex items-center justify-center gap-3 mx-auto">
+        <span>COMEÇAR JOGO</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+  </section>
+
+  <!-- TELA 2: CADASTRO DO JOGADOR -->
+  <section id="screenRegistration" class="hidden flex-1 flex flex-col justify-center items-center p-6">
+    <div class="max-w-md w-full glass-card p-8 rounded-3xl border-red-600/30 shadow-2xl">
+      <div class="text-center mb-6">
+        <i class="fa-solid fa-id-card text-4xl text-red-500 mb-2"></i>
+        <h2 class="text-2xl font-bold">Identificação do Operador</h2>
+        <p class="text-xs text-slate-400">Insira os seus dados para registar a sua pontuação no ranking</p>
+      </div>
+      <form id="formRegistration" onsubmit="handleRegistrationSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-300 mb-1">Nome ou Apelido</label>
+          <input type="text" id="inputName" required placeholder="Ex: Carlos Silva" class="w-full px-4 py-3 bg-black/50 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-red-500 transition">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-300 mb-1">Matrícula</label>
+          <input type="text" id="inputMatricula" required placeholder="Ex: 84920" class="w-full px-4 py-3 bg-black/50 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-red-500 transition">
+        </div>
+        <button type="submit" class="w-full py-4 honda-red honda-red-hover text-white font-bold rounded-xl shadow-lg shadow-red-900/50 transition duration-300 flex items-center justify-center gap-2">
+          <span>CONFIRMAR E JOGAR</span>
+          <i class="fa-solid fa-circle-check"></i>
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- TELA 3: POP-UP EXPANSIVO "VAMOS JOGAR" -->
+  <section id="screenTransition" class="hidden fixed inset-0 z-50 bg-red-700 flex justify-center items-center text-center animate-expand">
+    <div>
+      <i class="fa-solid fa-gamepad text-7xl text-white mb-4 animate-pulse"></i>
+      <h2 class="text-4xl sm:text-6xl font-black uppercase tracking-wider text-white">VAMOS JOGAR!</h2>
+      <p class="text-red-200 mt-2 text-sm sm:text-lg">Carregando desafios da Operação...</p>
+    </div>
+  </section>
+
+  <!-- TELA 4: SELEÇÃO DE NÍVEIS E RANKING -->
+  <section id="screenLevels" class="hidden flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 space-y-8">
+    <div class="glass-card p-4 rounded-2xl border-red-500/30 flex flex-wrap justify-between items-center gap-4">
+      <div>
+        <span class="text-xs text-slate-400 uppercase font-semibold block">Operador Conectado</span>
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-user-circle text-red-500"></i>
+          <span id="displayPlayerName">---</span> 
+          <span class="text-xs font-normal text-slate-400">(Matrícula: <span id="displayPlayerMatricula">---</span>)</span>
+        </h3>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="goToRegistration()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl border border-slate-600 transition flex items-center gap-2">
+          <i class="fa-solid fa-user-pen text-yellow-400"></i> Alterar Jogador
+        </button>
+        <button onclick="goToCover()" class="px-4 py-2 bg-red-900/80 hover:bg-red-800 text-xs font-bold rounded-xl border border-red-500/50 transition flex items-center gap-2">
+          <i class="fa-solid fa-house text-red-300"></i> Capa
+        </button>
+      </div>
+    </div>
+
+    <!-- Simulação de Data -->
+    <div class="glass-card p-3 rounded-xl border-yellow-500/30 flex flex-wrap justify-between items-center text-xs text-slate-300">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-clock text-yellow-400"></i>
+        <span>Data Atual do Sistema: <strong id="currentDateDisplay" class="text-white">--/--/----</strong></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-slate-400">Simular Data:</span>
+        <button onclick="simulateDate('2026-10-15')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded border border-slate-600">Atual (15/10)</button>
+        <button onclick="simulateDate('2026-10-22')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded border border-slate-600">22/10</button>
+        <button onclick="simulateDate('2026-10-26')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded border border-slate-600">26/10</button>
+        <button onclick="simulateDate('2026-10-28')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded border border-slate-600">28/10</button>
+        <button onclick="simulateDate('2026-10-30')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded border border-slate-600">30/10</button>
+      </div>
+    </div>
+
+    <!-- Grid de Níveis -->
+    <div>
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-layer-group text-red-500"></i> Níveis de Desafio
+      </h2>
+      <div id="levelsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </div>
+
+    <!-- Tabela de Ranking (Firebase) -->
+    <div class="glass-card p-6 rounded-2xl border-red-500/20">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-ranking-star text-yellow-400"></i> Ranking da Operação (Maior Pontuação)
+      </h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="border-b border-slate-700 text-slate-400 text-xs uppercase">
+              <th class="p-3">Posição</th>
+              <th class="p-3">Operador</th>
+              <th class="p-3">Matrícula</th>
+              <th class="p-3">Rodadas</th>
+              <th class="p-3 text-right">Pontos</th>
+            </tr>
+          </thead>
+          <tbody id="rankingTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TELA 5: EXECUÇÃO DO JOGO -->
+  <section id="screenGame" class="hidden flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border-red-500/30 space-y-6">
+      <div class="flex justify-between items-center border-b border-slate-700/60 pb-4">
+        <div>
+          <span id="gameLevelTitle" class="text-xs font-bold text-red-400 uppercase tracking-widest block">Nível 1</span>
+          <h2 id="gameRoundTitle" class="text-lg font-bold">Rodada 1 de 3</h2>
+        </div>
+        <div class="text-right">
+          <span class="text-xs text-slate-400 block">Sua Pontuação</span>
+          <span id="gameScoreDisplay" class="text-2xl font-black text-yellow-400">0 pts</span>
+        </div>
+      </div>
+      <div id="cluesContainer" class="space-y-3"></div>
+      <form id="formAnswer" onsubmit="handleAnswerSubmit(event)" class="space-y-3 pt-2">
+        <label class="block text-xs font-semibold uppercase text-slate-300">Sua Resposta para a Pista Ativa:</label>
+        <div class="flex gap-2">
+          <input type="text" id="inputAnswer" autocomplete="off" required placeholder="Digite a resposta..." class="flex-1 px-4 py-3 bg-black/60 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-red-500 transition">
+          <button type="submit" class="px-6 py-3 honda-red honda-red-hover text-white font-bold rounded-xl transition flex items-center gap-2">
+            <span>ENVIAR</span> <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+      </form>
+      <div class="pt-2 text-center">
+        <button onclick="showLevelsScreen()" class="text-xs text-slate-400 hover:text-white transition underline">
+          <i class="fa-solid fa-arrow-left"></i> Voltar ao Seleção de Níveis
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODAL CENTRALIZADO -->
+  <div id="modalOverlay" class="hidden fixed inset-0 z-50 modal-backdrop flex justify-center items-center p-4">
+    <div id="modalCard" class="max-w-md w-full glass-card p-6 sm:p-8 rounded-3xl border text-center shadow-2xl transform transition-all scale-95 opacity-0">
+      <div id="modalIconContainer" class="mb-4"></div>
+      <h3 id="modalTitle" class="text-2xl font-bold mb-2">---</h3>
+      <p id="modalMessage" class="text-sm text-slate-300 mb-6">---</p>
+      <button id="modalButton" onclick="closeModal()" class="w-full py-3 font-bold rounded-xl text-white transition">CONTINUAR</button>
+    </div>
+  </div>
+
+  <footer class="py-4 text-center text-xs text-slate-500 border-t border-slate-800/60 mt-auto">
+    <p>Treinamento Operacional Honda & Bulgarelli Advogados — © 2026</p>
+  </footer>
+
+  <!-- SCRIPT COM FIREBASE (TYPE="MODULE") -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "SUA_API_KEY",
+      authDomain: "jogo-tres-pontos.firebaseapp.com",
+      databaseURL: "https://jogo-tres-pontos-default-rtdb.firebaseio.com",
+      projectId: "jogo-tres-pontos",
+      storageBucket: "jogo-tres-pontos.appspot.com",
+      messagingSenderId: "60682371403",
+      appId: "SEU_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const gameLevels = [
+      {
+        id: 1,
+        title: "Nível 1: Introdução & Operação",
+        unlockDate: "2026-10-15",
+        rounds: [
+          {
+            id: "1-1",
+            answer: "SAFRA DIÁRIA",
+            clues: [
+              { points: 10, text: "Dica 1: Segmento operacional focado nos contratos com menor tempo de inadimplência." },
+              { points: 9, text: "Dica 2: Atende clientes que estão atrasados entre 11 e 15 dias (e atualizados de 16 a 30 dias)." },
+              { points: 8, text: "Dica 3: Foco em reabilitar o acesso do cliente às plataformas digitais rapidamente." }
+            ],
+            explanation: "Safra Diária é o segmento de cobrança para clientes com atrasos recentes (11 a 15 dias e 16 a 30 dias)[cite: 1]."
+          },
+          {
+            id: "1-2",
+            answer: "GRAVAME",
+            clues: [
+              { points: 10, text: "Dica 1: Impedimento registrado no Detran que vincula o veículo à instituição financeira." },
+              { points: 9, text: "Dica 2: Impede a transferência de propriedade do veículo enquanto houver saldo devedor." },
+              { points: 8, text: "Dica 3: A sua baixa é efetuada em até 10 dias úteis após a quitação total do financiamento." }
+            ],
+            explanation: "O Gravame é a restrição cadastrada no Detran referente ao financiamento do veículo[cite: 1]."
+          },
+          {
+            id: "1-3",
+            answer: "ATENDIMENTO HUMANIZADO",
+            clues: [
+              { points: 10, text: "Dica 1: Prática de comunicação focada na escuta ativa e no respeito às particularidades do indivíduo." },
+              { points: 9, text: "Dica 2: Prioriza a empatia e o entendimento do imprevisto financeiro antes de impor propostas." },
+              { points: 8, text: "Dica 3: Trata o devedor como pessoa e parceiro, não apenas como um número de contrato." }
+            ],
+            explanation: "Atendimento Humanizado consiste em conduzir a negociação com empatia e respeito[cite: 1]."
+          }
+        ]
+      },
+      {
+        id: 2,
+        title: "Nível 2: Cobrança Amigável & Garantias",
+        unlockDate: "2026-10-22",
+        rounds: [
+          {
+            id: "2-1",
+            answer: "ESTOQUE 1",
+            clues: [
+              { points: 10, text: "Dica 1: Faixa de cobrança intermediária para contratos com inadimplência acumulada." },
+              { points: 9, text: "Dica 2: Abrange o período em atraso compreendido entre 31 e 180 dias." },
+              { points: 8, text: "Dica 3: Refere-se a clientes com parcelas em aberto entre o 1º e o 6º mês de atraso." }
+            ],
+            explanation: "Estoque 1 representa a faixa de cobrança para parcelas vencidas entre 31 e 180 dias[cite: 1]."
+          },
+          {
+            id: "2-2",
+            answer: "ALIENAÇÃO FIDUCIÁRIA",
+            clues: [
+              { points: 10, text: "Dica 1: Modalidade de garantia real na qual a posse indireta do bem pertence ao credor." },
+              { points: 9, text: "Dica 2: O devedor utiliza o veículo enquanto paga, mas a propriedade resolúvel é do banco." },
+              { points: 8, text: "Dica 3: Permite ao credor reaver o bem garantido mediante ação judicial em caso de inadimplemento." }
+            ],
+            explanation: "Alienação Fiduciária transfere a propriedade do bem ao credor como garantia até a quitação[cite: 1]."
+          },
+          {
+            id: "2-3",
+            answer: "AUXÍLIO FUNERAL",
+            clues: [
+              { points: 10, text: "Dica 1: Benefício adicional e gratuito atrelado a apólices do Seguro de Proteção Financeira." },
+              { points: 9, text: "Dica 2: Cobre ou reembolsa despesas decorrentes de falecimento do segurado." },
+              { points: 8, text: "Dica 3: Pode ser acionado pelos familiares apresentando a certidão de óbito e notas de despesa." }
+            ],
+            explanation: "O Auxílio Funeral é um serviço gratuito complementar em apólices elegíveis do seguro SPF[cite: 1, 2]."
+          }
+        ]
+      },
+      {
+        id: 3,
+        title: "Nível 3: Recuperação Avançada",
+        unlockDate: "2026-10-26",
+        rounds: [
+          {
+            id: "3-1",
+            answer: "ESTOQUE 2",
+            clues: [
+              { points: 10, text: "Dica 1: Segmento de cobrança para contratos com longo tempo de atraso." },
+              { points: 9, text: "Dica 2: Abrange o período de inadimplência entre 181 e 360 dias." },
+              { points: 8, text: "Dica 3: Equivale a atrasos do 7º ao 12º mês com risco iminente de ajuizamento." }
+            ],
+            explanation: "Estoque 2 refere-se a contratos em atraso crítico de 181 a 360 dias[cite: 1]."
+          },
+          {
+            id: "3-2",
+            answer: "BUSCA E APREENSÃO",
+            clues: [
+              { points: 10, text: "Dica 1: Medida judicial para reaver a posse direta do veículo financiado não pago." },
+              { points: 9, text: "Dica 2: Geralmente solicitada pela instituição quando o atraso ultrapassa os limites amigáveis." },
+              { points: 8, text: "Dica 3: Resulta no recolhimento do veículo por oficial de justiça com auxílio policial." }
+            ],
+            explanation: "Busca e Apreensão é a ação judicial movida pelo credor para tomar a posse do bem financiado[cite: 1]."
+          },
+          {
+            id: "3-3",
+            answer: "DESEMPREGO INVOLUNTÁRIO",
+            clues: [
+              { points: 10, text: "Dica 1: Cobertura do seguro SPF para trabalhadores com registro em carteira (CLT)." },
+              { points: 9, text: "Dica 2: Garante a quitação de até 6 parcelas em demissões sem justa causa." },
+              { points: 8, text: "Dica 3: Exige a apresentação do Termo de Rescisão e da Carteira de Trabalho." }
+            ],
+            explanation: "Desemprego Involuntário cobre parcelas do financiamento em demissões sem justa causa de celetistas[cite: 1, 2]."
+          }
+        ]
+      },
+      {
+        id: 4,
+        title: "Nível 4: Soluções Jurídicas & Processos",
+        unlockDate: "2026-10-28",
+        rounds: [
+          {
+            id: "4-1",
+            answer: "ENTREGA AMIGÁVEL",
+            clues: [
+              { points: 10, text: "Dica 1: Acordo onde o cliente devolve voluntariamente o bem para saldar a dívida." },
+              { points: 9, text: "Dica 2: Evita os custos e desgaste de uma ação judicial de busca e apreensão." },
+              { points: 8, text: "Dica 3: O veículo é entregue ao banco para quitação parcial ou total do contrato." }
+            ],
+            explanation: "Entrega Amigável é a devolução voluntária do bem ao banco para amortizar ou quitar o débito[cite: 1]."
+          },
+          {
+            id: "4-2",
+            answer: "TABULAÇÃO 508",
+            clues: [
+              { points: 10, text: "Dica 1: Código específico de sistema utilizado nas centrais de atendimento telefónico." },
+              { points: 9, text: "Dica 2: Deve ser registrado pelo operador imediatamente quando a chamada é interrompida." },
+              { points: 8, text: "Dica 3: Significa especificamente 'Queda de Ligação' durante o contato." }
+            ],
+            explanation: "A tabulação 508 é utilizada para registrar a queda de ligação telefônica[cite: 1]."
+          },
+          {
+            id: "4-3",
+            answer: "INCAPACIDADE FÍSICA TEMPORÁRIA",
+            clues: [
+              { points: 10, text: "Dica 1: Cobertura de seguro voltada para profissionais autônomos ou liberais." },
+              { points: 9, text: "Dica 2: Cobre o pagamento de parcelas em casos de afastamento por doença ou acidente." },
+              { points: 8, text: "Dica 3: Exige comprovação de trabalho autônomo e relatório/laudo médico." }
+            ],
+            explanation: "Incapacidade Física Temporária atende autônomos impedidos de trabalhar por motivo de saúde[cite: 1, 2]."
+          }
+        ]
+      },
+      {
+        id: 5,
+        title: "Nível 5: Casos Especiais & Regras SPF",
+        unlockDate: "2026-10-30",
+        rounds: [
+          {
+            id: "5-1",
+            answer: "RESTRIÇÃO RENAJUD",
+            clues: [
+              { points: 10, text: "Dica 1: Ferramenta eletrônica que interliga o Judiciário e o Denatran." },
+              { points: 9, text: "Dica 2: Insere bloqueios judiciais diretamente no cadastro do veículo em todo o país." },
+              { points: 8, text: "Dica 3: Impede o licenciamento, circulação ou transferência do bem sob ordem do juiz." }
+            ],
+            explanation: "O bloqueio via Renajud efetiva ordens judiciais de restrição sobre o veículo[cite: 1]."
+          },
+          {
+            id: "5-2",
+            answer: "TABULAÇÃO 4654",
+            clues: [
+              { points: 10, text: "Dica 1: Código específico do sistema CPC para qualificar a justificativa do cliente." },
+              { points: 9, text: "Dica 2: Usado quando o cliente relata ter perdido o vínculo empregatício sem justa causa." },
+              { points: 8, text: "Dica 3: Classifica-se como 'Sem condições de pgto - Desemprego'." }
+            ],
+            explanation: "A tabulação 4654 identifica o motivo de inadimplência por desemprego[cite: 1]."
+          },
+          {
+            id: "5-3",
+            answer: "CARÊNCIA DE SINISTRO",
+            clues: [
+              { points: 10, text: "Dica 1: Intervalo de tempo exigido entre o evento ocorrido e a requisição do benefício." },
+              { points: 9, text: "Dica 2: No seguro SPF, por exemplo, exige-se prazo mínimo de 31 dias para elegibilidade." },
+              { points: 8, text: "Dica 3: Período regimental em que o seguro ainda não indeniza o sinistro." }
+            ],
+            explanation: "Carência de Sinistro é o período legal mínimo após o evento para ter direito à indenização[cite: 2]."
+          }
+        ]
+      }
+    ];
+
+    let simulatedSystemDate = "2026-10-15";
+    let currentPlayer = { name: "", matricula: "", score: 0, completedRounds: 0 };
+    let currentRoundState = { levelId: null, roundIndex: 0, clueIndex: 0, roundData: null };
+
+    window.goToCover = () => showScreen("screenCover");
+    window.goToRegistration = () => {
+      if (currentPlayer.name) {
+        document.getElementById("inputName").value = currentPlayer.name;
+        document.getElementById("inputMatricula").value = currentPlayer.matricula;
+      }
+      showScreen("screenRegistration");
+    };
+
+    window.handleRegistrationSubmit = (event) => {
+      event.preventDefault();
+      const name = document.getElementById("inputName").value.trim();
+      const matricula = document.getElementById("inputMatricula").value.trim();
+      if (!name || !matricula) return;
+
+      if (currentPlayer.matricula !== matricula) {
+        currentPlayer = { name, matricula, score: 0, completedRounds: 0 };
+      } else {
+        currentPlayer.name = name;
+      }
+      savePlayerData();
+      updateHeaderAndPlayerDisplay();
+      showScreen("screenTransition");
+      setTimeout(() => { showLevelsScreen(); }, 1200);
+    };
+
+    window.simulateDate = (dateStr) => {
+      simulatedSystemDate = dateStr;
+      localStorage.setItem("honda_simulated_date", dateStr);
+      updateDateDisplays();
+      renderLevels();
+    };
+
+    window.startLevel = (levelId) => {
+      const level = gameLevels.find(l => l.id === levelId);
+      if (!level || !isLevelUnlocked(level.unlockDate)) return;
+      currentRoundState = { levelId, roundIndex: 0, clueIndex: 0, roundData: level.rounds[0] };
+      loadRoundUI();
+      showScreen("screenGame");
+    };
+
+    window.handleAnswerSubmit = (event) => {
+      event.preventDefault();
+      const userAns = document.getElementById("inputAnswer").value.trim();
+      if (!userAns) return;
+
+      const round = currentRoundState.roundData;
+      const isCorrect = normalizeString(userAns) === normalizeString(round.answer);
+
+      if (isCorrect) {
+        const earnedPoints = round.clues[currentRoundState.clueIndex].points;
+        currentPlayer.score += earnedPoints;
+        currentPlayer.completedRounds += 1;
+        savePlayerData();
+        window.updateRanking(currentPlayer);
+
+        openModal(true, "RESPOSTA CORRETA!", `Parabéns, ${currentPlayer.name}! Acertou a resposta <strong>"${round.answer}"</strong> na Pista ${currentRoundState.clueIndex + 1} e ganhou <strong>+${earnedPoints} pontos</strong>!`, () => advanceRound());
+      } else {
+        if (currentRoundState.clueIndex < 2) {
+          currentRoundState.clueIndex += 1;
+          renderClues();
+          document.getElementById("inputAnswer").value = "";
+          openModal(false, "RESPOSTA INCORRETA!", `Sua resposta está incorreta. Liberamos a <strong>Pista ${currentRoundState.clueIndex + 1}</strong> para você tentar novamente!`, () => document.getElementById("inputAnswer").focus());
+        } else {
+          openModal(false, "TENTATIVAS ESGOTADAS!", `Não foi desta vez!<br><br><strong>Resposta Correta:</strong> <span class="text-yellow-400">${round.answer}</span><br><span class="text-xs text-slate-300">${round.explanation}</span>`, () => advanceRound());
+        }
+      }
+    };
+
+    window.showLevelsScreen = showLevelsScreen;
+    window.closeModal = closeModal;
+
+    window.updateRanking = function(player) {
+      set(ref(db, 'rankings/' + player.matricula), {
+        name: player.name,
+        matricula: player.matricula,
+        score: player.score,
+        completedRounds: player.completedRounds
+      });
+    };
+
+    onValue(ref(db, 'rankings'), (snapshot) => {
+      const data = snapshot.val();
+      const rankingArray = data ? Object.values(data) : [];
+      rankingArray.sort((a, b) => b.score - a.score);
+
+      const tbody = document.getElementById("rankingTableBody");
+      tbody.innerHTML = "";
+      if (rankingArray.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500 italic">Nenhum jogador registrado ainda. Seja o primeiro!</td></tr>`;
+        return;
+      }
+      rankingArray.forEach((item, idx) => {
+        const isCurrent = item.matricula === currentPlayer.matricula;
+        let medal = `#${idx + 1}`;
+        if (idx === 0) medal = `🥇 <span class="text-yellow-400 font-bold">1º</span>`;
+        if (idx === 1) medal = `🥈 <span class="text-slate-300 font-bold">2º</span>`;
+        if (idx === 2) medal = `🥉 <span class="text-amber-600 font-bold">3º</span>`;
+
+        const tr = document.createElement("tr");
+        tr.className = `border-b border-slate-800/80 transition ${isCurrent ? 'bg-red-950/40 font-semibold text-white' : 'hover:bg-white/5 text-slate-300'}`;
+        tr.innerHTML = `
+          <td class="p-3">${medal}</td>
+          <td class="p-3 flex items-center gap-2">
+            <i class="fa-solid fa-user text-xs ${isCurrent ? 'text-red-400' : 'text-slate-500'}"></i>
+            <span>${item.name}</span>
+            ${isCurrent ? '<span class="text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded uppercase">Você</span>' : ''}
+          </td>
+          <td class="p-3 text-slate-400">${item.matricula}</td>
+          <td class="p-3 text-slate-400">${item.completedRounds || 0} rodadas</td>
+          <td class="p-3 text-right font-black text-yellow-400 text-base">${item.score} pts</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    });
+
+    function showScreen(screenId) {
+      const screens = ["screenCover", "screenRegistration", "screenTransition", "screenLevels", "screenGame"];
+      screens.forEach(id => document.getElementById(id).classList.add("hidden"));
+      document.getElementById(screenId).classList.remove("hidden");
+      const header = document.getElementById("appHeader");
+      if (screenId === "screenLevels" || screenId === "screenGame") {
+        header.classList.remove("hidden");
+      } else {
+        header.classList.add("hidden");
+      }
+    }
+
+    function loadSimulatedDate() {
+      const saved = localStorage.getItem("honda_simulated_date");
+      if (saved) simulatedSystemDate = saved;
+    }
+
+    function updateDateDisplays() {
+      document.getElementById("currentDateDisplay").innerText = formatDateBR(simulatedSystemDate);
+    }
+
+    function formatDateBR(dateStr) {
+      const parts = dateStr.split("-");
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function isLevelUnlocked(unlockDateStr) {
+      return simulatedSystemDate >= unlockDateStr;
+    }
+
+    function renderLevels() {
+      const grid = document.getElementById("levelsGrid");
+      grid.innerHTML = "";
+      gameLevels.forEach(level => {
+        const unlocked = isLevelUnlocked(level.unlockDate);
+        const card = document.createElement("div");
+        card.className = `glass-card p-5 rounded-2xl border transition relative overflow-hidden flex flex-col justify-between ${
+          unlocked ? "border-red-500/40 hover:border-red-500 hover:bg-white/10 cursor-pointer" : "border-slate-800 opacity-60"
+        }`;
+        card.innerHTML = `
+          <div>
+            <div class="flex justify-between items-start mb-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-red-400">Nível ${level.id}</span>
+              ${unlocked ? `<span class="text-xs bg-green-900/60 text-green-300 px-2 py-0.5 rounded-full border border-green-500/40"><i class="fa-solid fa-lock-open"></i> Liberado</span>` : `<span class="text-xs bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full border border-slate-700"><i class="fa-solid fa-lock"></i> ${formatDateBR(level.unlockDate)}</span>`}
+            </div>
+            <h3 class="font-bold text-base mb-2 text-white">${level.title}</h3>
+            <p class="text-xs text-slate-400">3 Rodadas com pontuação gradual (10, 9 e 8 pts).</p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-700/50 flex justify-between items-center">
+            <span class="text-xs text-slate-400">${level.rounds.length} Rodadas</span>
+            ${unlocked ? `<button onclick="startLevel(${level.id})" class="px-4 py-1.5 honda-red honda-red-hover text-white text-xs font-bold rounded-lg shadow">JOGAR <i class="fa-solid fa-play ml-1"></i></button>` : `<span class="text-xs text-slate-500 italic">Bloqueado</span>`}
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function loadRoundUI() {
+      const level = gameLevels.find(l => l.id === currentRoundState.levelId);
+      const round = level.rounds[currentRoundState.roundIndex];
+      currentRoundState.roundData = round;
+
+      document.getElementById("gameLevelTitle").innerText = level.title;
+      document.getElementById("gameRoundTitle").innerText = `Rodada ${currentRoundState.roundIndex + 1} de ${level.rounds.length}`;
+      document.getElementById("gameScoreDisplay").innerText = `${currentPlayer.score} pts`;
+
+      renderClues();
+      document.getElementById("inputAnswer").value = "";
+      document.getElementById("inputAnswer").focus();
+    }
+
+    function renderClues() {
+      const container = document.getElementById("cluesContainer");
+      container.innerHTML = "";
+      const round = currentRoundState.roundData;
+      for (let i = 0; i <= currentRoundState.clueIndex; i++) {
+        const clue = round.clues[i];
+        const isCurrent = i === currentRoundState.clueIndex;
+        const clueBox = document.createElement("div");
+        clueBox.className = `p-4 rounded-xl border text-sm transition-all ${isCurrent ? 'bg-red-950/40 border-red-500/60 text-white shadow-lg shadow-red-950/50' : 'bg-black/30 border-slate-800 text-slate-400'}`;
+        clueBox.innerHTML = `
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-bold uppercase ${isCurrent ? 'text-red-400' : 'text-slate-500'}">Pista ${i + 1}</span>
+            <span class="text-xs px-2 py-0.5 rounded ${isCurrent ? 'bg-yellow-500/20 text-yellow-300 font-bold border border-yellow-500/40' : 'bg-slate-800 text-slate-500'}">${clue.points} Pontos</span>
+          </div>
+          <p class="font-medium">${clue.text}</p>
+        `;
+        container.appendChild(clueBox);
+      }
+    }
+
+    function advanceRound() {
+      const level = gameLevels.find(l => l.id === currentRoundState.levelId);
+      if (currentRoundState.roundIndex < level.rounds.length - 1) {
+        currentRoundState.roundIndex += 1;
+        currentRoundState.clueIndex = 0;
+        loadRoundUI();
+      } else {
+        showLevelsScreen();
+      }
+    }
+
+    function normalizeString(str) {
+      return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+    }
+
+    function openModal(isSuccess, title, messageHtml, onCloseCallback) {
+      const overlay = document.getElementById("modalOverlay");
+      const card = document.getElementById("modalCard");
+      const iconContainer = document.getElementById("modalIconContainer");
+      const modalTitle = document.getElementById("modalTitle");
+      const modalMessage = document.getElementById("modalMessage");
+      const button = document.getElementById("modalButton");
+
+      if (isSuccess) {
+        card.className = "max-w-md w-full glass-card p-6 sm:p-8 rounded-3xl border border-green-500/50 text-center shadow-2xl bg-gradient-to-b from-green-950/80 to-black/90";
+        iconContainer.innerHTML = `<i class="fa-solid fa-circle-check text-6xl text-green-400 animate-bounce"></i>`;
+        modalTitle.className = "text-2xl font-bold mb-2 text-green-400";
+        button.className = "w-full py-3 font-bold rounded-xl text-white bg-green-600 hover:bg-green-500 shadow-lg shadow-green-900/50 transition";
+      } else {
+        card.className = "max-w-md w-full glass-card p-6 sm:p-8 rounded-3xl border border-red-500/50 text-center shadow-2xl bg-gradient-to-b from-red-950/80 to-black/90";
+        iconContainer.innerHTML = `<i class="fa-solid fa-circle-xmark text-6xl text-red-500 animate-pulse"></i>`;
+        modalTitle.className = "text-2xl font-bold mb-2 text-red-400";
+        button.className = "w-full py-3 font-bold rounded-xl text-white honda-red honda-red-hover shadow-lg shadow-red-900/50 transition";
+      }
+
+      modalTitle.innerText = title;
+      modalMessage.innerHTML = messageHtml;
+      window.modalCloseHandler = onCloseCallback;
+      overlay.classList.remove("hidden");
+      setTimeout(() => {
+        card.classList.remove("scale-95", "opacity-0");
+        card.classList.add("scale-100", "opacity-100");
+      }, 10);
+    }
+
+    function closeModal() {
+      const overlay = document.getElementById("modalOverlay");
+      const card = document.getElementById("modalCard");
+      card.classList.remove("scale-100", "opacity-100");
+      card.classList.add("scale-95", "opacity-0");
+      setTimeout(() => {
+        overlay.classList.add("hidden");
+        if (window.modalCloseHandler) {
+          window.modalCloseHandler();
+          window.modalCloseHandler = null;
+        }
+      }, 200);
+    }
+
+    function savePlayerData() {
+      localStorage.setItem("honda_current_player", JSON.stringify(currentPlayer));
+    }
+
+    function loadPlayerData() {
+      const saved = localStorage.getItem("honda_current_player");
+      if (saved) {
+        currentPlayer = JSON.parse(saved);
+        updateHeaderAndPlayerDisplay();
+      }
+    }
+
+    function updateHeaderAndPlayerDisplay() {
+      document.getElementById("headerPlayerName").innerText = currentPlayer.name || "---";
+      document.getElementById("headerPlayerMatricula").innerText = currentPlayer.matricula || "---";
+      document.getElementById("displayPlayerName").innerText = currentPlayer.name || "---";
+      document.getElementById("displayPlayerMatricula").innerText = currentPlayer.matricula || "---";
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      loadSimulatedDate();
+      loadPlayerData();
+      updateDateDisplays();
+    });
+  </script>
+</body>
+</html>
